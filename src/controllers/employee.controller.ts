@@ -4,27 +4,21 @@ import {
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
-import {Employee} from '../models';
+import {Department, Employee} from '../models';
 import {EmployeeRepository} from '../repositories';
 
 export class EmployeeController {
   constructor(
     @repository(EmployeeRepository)
-    public employeeRepository : EmployeeRepository,
-  ) {}
+    public employeeRepository: EmployeeRepository,
+  ) { }
 
   @post('/employees')
   @response(200, {
@@ -146,5 +140,23 @@ export class EmployeeController {
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.employeeRepository.deleteById(id);
+  }
+
+  @get('/employees/{id}/department', {
+    responses: {
+      '200': {
+        description: 'Department belonging to Employee',
+        content: {
+          'application/json': {
+            schema: {type: 'array', items: getModelSchemaRef(Department)},
+          },
+        },
+      },
+    },
+  })
+  async getDepartment(
+    @param.path.string('id') id: typeof Employee.prototype.id,
+  ): Promise<Department> {
+    return this.employeeRepository.department(id);
   }
 }

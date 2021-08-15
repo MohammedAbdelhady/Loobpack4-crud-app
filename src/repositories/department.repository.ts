@@ -1,16 +1,22 @@
-import {inject} from '@loopback/core';
-import {DefaultCrudRepository} from '@loopback/repository';
+import {inject, Getter} from '@loopback/core';
+import {DefaultCrudRepository, repository, HasManyRepositoryFactory} from '@loopback/repository';
 import {MongoDataSource} from '../datasources';
-import {Department, DepartmentRelations} from '../models';
+import {Department, DepartmentRelations, Employee} from '../models';
+import {EmployeeRepository} from './employee.repository';
 
 export class DepartmentRepository extends DefaultCrudRepository<
   Department,
   typeof Department.prototype.id,
   DepartmentRelations
 > {
+
+  public readonly employees: HasManyRepositoryFactory<Employee, typeof Department.prototype.id>;
+
   constructor(
-    @inject('datasources.mongo') dataSource: MongoDataSource,
+    @inject('datasources.mongo') dataSource: MongoDataSource, @repository.getter('EmployeeRepository') protected employeeRepositoryGetter: Getter<EmployeeRepository>,
   ) {
     super(Department, dataSource);
+    this.employees = this.createHasManyRepositoryFactoryFor('employees', employeeRepositoryGetter,);
+    this.registerInclusionResolver('employees', this.employees.inclusionResolver);
   }
 }
